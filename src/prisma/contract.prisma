@@ -1,10 +1,63 @@
 // use prisma-8
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String
-  createdAt TimestamptzString @default(now())
-  updatedAt temporal.updatedAtString()
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  name            String
+  
+  createdAt       TimestamptzString @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  Project Project[]
 }
 
+model Runtime {
+  id              Int     @id @default(autoincrement())
+  name            String  @unique
+  baseImage       String
+
+  Project         Project[]
+}
+
+model Project {
+  id              Int     @id @default(autoincrement())
+  userId          Int
+  runtimeId       Int
+  name            String  @unique
+  repoUrl         String
+  branch          String  @default("main")
+  runtimeVersion  String
+  installCommand  String
+  buildCommand    String
+  startCommand    String
+  port            Int
+
+  createdAt       TimestamptzString @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  User            User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  Runtime         Runtime @relation(fields: [runtimeId], references: [id], onDelete: Restrict)
+  Deployment      Deployment[]
+}
+
+enum Status {
+  PENDING
+  DEPLOYED
+  FAILED
+}
+
+model Deployment {
+  id              Int     @id @default(autoincrement())
+  projectId       Int
+
+  image           String
+  url             String
+  status          Status   @default(PENDING)
+  replicas        Int      @default(1)
+  commitHash      String
+
+  createdAt       TimestamptzString @default(now())
+  updatedAt       temporal.updatedAtString()
+
+  Project         Project @relation(fields: [projectId], references: [id], onDelete: Restrict)
+}

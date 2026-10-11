@@ -1,0 +1,323 @@
+[
+  {
+    "id": "table.deployment",
+    "label": "Create table \"deployment\"",
+    "summary": "Creates table \"deployment\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "deployment"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"deployment\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deployment\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"deployment\"",
+        "sql": "CREATE TABLE \"public\".\"deployment\" (\n  \"id\" SERIAL NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"deployment\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"deployment\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.project",
+    "label": "Create table \"project\"",
+    "summary": "Creates table \"project\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "project"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"project\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"project\"",
+        "sql": "CREATE TABLE \"public\".\"project\" (\n  \"branch\" text DEFAULT 'main' NOT NULL,\n  \"buildCommand\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"installCommand\" text NOT NULL,\n  \"name\" text NOT NULL,\n  \"repoUrl\" text NOT NULL,\n  \"runtimeId\" int4 NOT NULL,\n  \"runtimeVersion\" text NOT NULL,\n  \"startCommand\" text NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"userId\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"project\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.runtime",
+    "label": "Create table \"runtime\"",
+    "summary": "Creates table \"runtime\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "runtime"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"runtime\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"runtime\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"runtime\"",
+        "sql": "CREATE TABLE \"public\".\"runtime\" (\n  \"baseImage\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"name\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"runtime\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"runtime\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.runtime.runtime_name_key",
+    "label": "Add unique constraint on \"runtime\" (name)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "runtime_name_key",
+        "table": "runtime"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"runtime_name_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "runtime_name_key",
+          "public",
+          "\"public\".\"runtime\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"runtime_name_key\"",
+        "sql": "ALTER TABLE \"public\".\"runtime\" ADD CONSTRAINT \"runtime_name_key\" UNIQUE (\"name\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"runtime_name_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "runtime_name_key",
+          "public",
+          "\"public\".\"runtime\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.project.project_runtimeId_idx_dd339145",
+    "label": "Create index \"project_runtimeId_idx_dd339145\" on \"project\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "project_runtimeId_idx_dd339145",
+        "table": "project"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"project_runtimeId_idx_dd339145\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_runtimeId_idx_dd339145\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"project_runtimeId_idx_dd339145\"",
+        "sql": "CREATE INDEX \"project_runtimeId_idx_dd339145\" ON \"public\".\"project\" (\"runtimeId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"project_runtimeId_idx_dd339145\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_runtimeId_idx_dd339145\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.project.project_userId_idx_a489d58a",
+    "label": "Create index \"project_userId_idx_a489d58a\" on \"project\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "project_userId_idx_a489d58a",
+        "table": "project"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"project_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"project_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"project_userId_idx_a489d58a\" ON \"public\".\"project\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"project_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"project_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.project.project_userId_fkey",
+    "label": "Add foreign key \"project_userId_fkey\" on \"project\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "project_userId_fkey",
+        "table": "project"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"project_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_userId_fkey",
+          "public",
+          "\"public\".\"project\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"project_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"project\"\nADD CONSTRAINT \"project_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"project_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_userId_fkey",
+          "public",
+          "\"public\".\"project\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.project.project_runtimeId_fkey",
+    "label": "Add foreign key \"project_runtimeId_fkey\" on \"project\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "project_runtimeId_fkey",
+        "table": "project"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"project_runtimeId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_runtimeId_fkey",
+          "public",
+          "\"public\".\"project\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"project_runtimeId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"project\"\nADD CONSTRAINT \"project_runtimeId_fkey\"\nFOREIGN KEY (\"runtimeId\")\nREFERENCES \"public\".\"runtime\" (\"id\")\nON DELETE RESTRICT"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"project_runtimeId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "project_runtimeId_fkey",
+          "public",
+          "\"public\".\"project\""
+        ]
+      }
+    ]
+  }
+]
