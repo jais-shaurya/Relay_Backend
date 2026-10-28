@@ -2,30 +2,34 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/app.js",
   "scripts": {
+    "build": "npx tsc -b",
     "dev": "npx tsc -b && node dist/app.js",
-    "contract:emit": "prisma contract emit"
+    "seed": "npx tsc -b && node dist/prisma/seed.js",
+    "contract:emit": "prisma contract emit",
+    "test": "npm run build && node --test dist/../tests/*.test.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@prisma/cli-engine": "^0.4.0",
+    "@prisma/cli-engine": "^0.7.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.2",
-    "prisma": "^8.0.0-rc.15",
+    "prisma": "^8.0.0-rc.23",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@kubernetes/client-node": "^2.0.0",
-    "@prisma/orm-postgres": "^8.0.0-rc.11",
+    "@prisma/orm-postgres": "^8.0.0-rc.18",
     "axios": "^1.20.0",
     "cors": "^2.8.6",
-    "dotenv": "^18.0.3",
+    "dotenv": "^18.0.8",
     "express": "^5.2.1",
-    "firebase-admin": "^14.4.0"
+    "firebase-admin": "^14.4.0",
+    "zod": "^4.6.7"
   }
 }

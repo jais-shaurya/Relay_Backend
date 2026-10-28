@@ -1,0 +1,2318 @@
+{
+  "info": {
+    "_postman_id": "f4c9e88d-2b36-40e1-9596-f9fa3a9e0123",
+    "name": "Relay Backend API Test Suite",
+    "description": "Complete Postman v2.1 collection testing all Relay backend endpoints, authentication, validation, error handling, project management, deployment lifecycle, logs, and negative test cases.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Health Check",
+      "description": "Basic infrastructure endpoints outside `/api/v1` verifying API responsiveness.",
+      "item": [
+        {
+          "name": "1.1 Public Health Check (GET /health)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is valid JSON', () => {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "pm.test('Response matches expected health payload', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.status).to.eql('OK');",
+                  "    pm.expect(res.message).to.eql('API is healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": []
+            },
+            "description": "Verifies public health endpoint. Requires only the `x-api-key` header."
+          }
+        },
+        {
+          "name": "1.2 Secured Health Check (GET /secured/user)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is valid JSON', () => {",
+                  "    pm.response.to.be.json;",
+                  "});",
+                  "pm.test('Response matches expected secured health payload', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.status).to.eql('OK');",
+                  "    pm.expect(res.message).to.eql('Secured API is healthy');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/secured/user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "secured",
+                "user"
+              ],
+              "query": []
+            },
+            "description": "Verifies secured health endpoint. Requires both `x-api-key` and valid Firebase Bearer token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Authentication",
+      "description": "User profile initialization and synchronization via verified Firebase ID tokens.",
+      "item": [
+        {
+          "name": "2.1 Initialize or Login Profile (POST /api/v1/auth)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains initialized user object', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('user');",
+                  "    const user = res.user;",
+                  "    pm.expect(user).to.have.property('id');",
+                  "    pm.expect(user.id).to.be.a('number');",
+                  "    pm.expect(user).to.have.property('firebaseUid');",
+                  "    pm.expect(user.firebaseUid).to.be.a('string');",
+                  "    pm.expect(user).to.have.property('email');",
+                  "    pm.expect(user).to.have.property('name');",
+                  "    pm.expect(user).to.have.property('createdAt');",
+                  "    pm.expect(user).to.have.property('updatedAt');",
+                  "    pm.environment.set('userId', user.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth"
+              ],
+              "query": []
+            },
+            "description": "Creates or fetches the user profile using claims from the verified Firebase ID token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Users",
+      "description": "Profile inspection, profile editing, token revocation, and user account management.",
+      "item": [
+        {
+          "name": "3.1 Get Profile (GET /api/v1/users)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response matches User schema', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('user');",
+                  "    const user = res.user;",
+                  "    pm.expect(user.id).to.be.a('number');",
+                  "    pm.expect(user.email).to.be.a('string');",
+                  "    pm.expect(user.name).to.be.a('string');",
+                  "    pm.expect(user.firebaseUid).to.be.a('string');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Retrieves the authenticated user's Relay profile."
+          }
+        },
+        {
+          "name": "3.2 Update Profile Name (PATCH /api/v1/users)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('User name was updated', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.user.name).to.eql('Relay Test User Updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Relay Test User Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Updates the user's display name. Only `name` is allowed in the body."
+          }
+        },
+        {
+          "name": "3.3 Revoke Refresh Tokens (POST /api/v1/users/logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Logout response message matches contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Refresh tokens revoked.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "logout"
+              ],
+              "query": []
+            },
+            "description": "Revokes active Firebase refresh tokens for server-side logout."
+          }
+        },
+        {
+          "name": "3.4 Delete Profile [Opt-In / Destructive] (DELETE /api/v1/users)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200 (deleted) or 409 (projects reference user)', () => {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message matches contract', () => {",
+                  "        pm.expect(pm.response.json().message).to.eql('User profile deleted.');",
+                  "    });",
+                  "} else if (pm.response.code === 409) {",
+                  "    pm.test('Conflict message matches foreign key constraint', () => {",
+                  "        pm.expect(pm.response.json().message).to.eql('User profile cannot be deleted while projects still reference it.');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Deletes the Relay profile. Returns 409 if active projects exist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Runtimes",
+      "description": "Read-only endpoints listing available Docker runtime environments.",
+      "item": [
+        {
+          "name": "4.1 List Supported Runtimes (GET /api/v1/runtimes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains runtimes array', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('runtimes');",
+                  "    pm.expect(res.runtimes).to.be.an('array');",
+                  "    if (res.runtimes.length > 0) {",
+                  "        const rt = res.runtimes[0];",
+                  "        pm.expect(rt).to.have.property('id');",
+                  "        pm.expect(rt).to.have.property('name');",
+                  "        pm.expect(rt).to.have.property('baseImage');",
+                  "        pm.environment.set('runtimeId', rt.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/runtimes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "runtimes"
+              ],
+              "query": []
+            },
+            "description": "Lists all seeded runtimes (Node.js, Python) ordered by name."
+          }
+        },
+        {
+          "name": "4.2 Get Runtime by ID (GET /api/v1/runtimes/:runtimeId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains runtime matching runtimeId', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('runtime');",
+                  "    pm.expect(res.runtime.id).to.eql(Number(pm.environment.get('runtimeId')));",
+                  "    pm.expect(res.runtime).to.have.property('name');",
+                  "    pm.expect(res.runtime).to.have.property('baseImage');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/runtimes/{{runtimeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "runtimes",
+                "{{runtimeId}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches details of a specific runtime by ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Projects",
+      "description": "Project configuration management (CRUD). Does not trigger Jenkins or Kubernetes.",
+      "item": [
+        {
+          "name": "5.1 Create Project (POST /api/v1/projects)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const uniqueName = 'relay-test-' + Date.now();",
+                  "pm.environment.set('testProjectName', uniqueName);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201', () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Project created with expected schema', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('project');",
+                  "    const p = res.project;",
+                  "    pm.expect(p.id).to.be.a('number');",
+                  "    pm.expect(p.name).to.eql(pm.environment.get('testProjectName'));",
+                  "    pm.expect(p.port).to.eql(3000);",
+                  "    pm.expect(p.branch).to.eql('main');",
+                  "    pm.environment.set('projectId', p.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{testProjectName}}\",\n  \"runtimeId\": 1,\n  \"repoUrl\": \"https://github.com/expressjs/express\",\n  \"branch\": \"main\",\n  \"runtimeVersion\": \"20-alpine\",\n  \"installCommand\": \"npm install\",\n  \"buildCommand\": \"\",\n  \"startCommand\": \"npm start\",\n  \"port\": 3000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects"
+              ],
+              "query": []
+            },
+            "description": "Creates a new project owned by the authenticated Firebase user. Saves `projectId`."
+          }
+        },
+        {
+          "name": "5.2 List User Projects (GET /api/v1/projects)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains projects array ordered newest first', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.projects).to.be.an('array');",
+                  "    pm.expect(res.projects.length).to.be.greaterThan(0);",
+                  "    pm.expect(res.projects[0].id).to.eql(Number(pm.environment.get('projectId')));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects"
+              ],
+              "query": []
+            },
+            "description": "Lists all projects owned by the authenticated user, newest first."
+          }
+        },
+        {
+          "name": "5.3 Get Project by ID (GET /api/v1/projects/:projectId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Returns requested project', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.project.id).to.eql(Number(pm.environment.get('projectId')));",
+                  "    pm.expect(res.project.name).to.eql(pm.environment.get('testProjectName'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches details of an owned project."
+          }
+        },
+        {
+          "name": "5.4 Update Project Configuration (PATCH /api/v1/projects/:projectId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 (or 409 if deployment already exists)', () => {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Project fields updated', () => {",
+                  "        const res = pm.response.json();",
+                  "        pm.expect(res.project.port).to.eql(8080);",
+                  "        pm.expect(res.project.startCommand).to.eql('node index.js');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startCommand\": \"node index.js\",\n  \"port\": 8080\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}"
+              ],
+              "query": []
+            },
+            "description": "Updates project settings. Blocked with 409 once any deployment history exists."
+          }
+        },
+        {
+          "name": "5.5 Delete Project [Cleanup] (DELETE /api/v1/projects/:projectId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 409 (if deployment history exists)', () => {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Message indicates project deleted', () => {",
+                  "        pm.expect(pm.response.json().message).to.eql('Project deleted.');",
+                  "    });",
+                  "} else {",
+                  "    pm.test('Conflict message matches contract', () => {",
+                  "        pm.expect(pm.response.json().message).to.eql('Project cannot be deleted while deployment history exists.');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}"
+              ],
+              "query": []
+            },
+            "description": "Deletes a project without deployment history. Blocked if deployments exist."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Deployments",
+      "description": "Deployment lifecycle: creation, polling, Kubernetes status, and resource deletion.",
+      "item": [
+        {
+          "name": "6.1 Create Deployment (POST /api/v1/projects/:projectId/deployments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 (deployed), 202 (accepted), or expected external integration status', () => {",
+                  "    pm.expect([201, 202, 409, 500, 502, 503]).to.include(pm.response.code);",
+                  "});",
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 201 || pm.response.code === 202) {",
+                  "    pm.test('Response contains valid Deployment object', () => {",
+                  "        pm.expect(res).to.have.property('deployment');",
+                  "        const d = res.deployment;",
+                  "        pm.expect(d.id).to.be.a('number');",
+                  "        pm.expect(d.projectId).to.eql(Number(pm.environment.get('projectId')));",
+                  "        pm.expect(['PENDING', 'BUILDING', 'DEPLOYING', 'DEPLOYED']).to.include(d.status);",
+                  "        pm.environment.set('deploymentId', d.id);",
+                  "        if (d.jenkinsBuildNumber) {",
+                  "            pm.environment.set('buildNumber', d.jenkinsBuildNumber);",
+                  "        }",
+                  "    });",
+                  "} else if (pm.response.code === 409) {",
+                  "    pm.test('Active deployment conflict handled cleanly', () => {",
+                  "        pm.expect(res.message).to.eql('A deployment is already in progress for this project.');",
+                  "        pm.expect(res.deploymentId).to.be.a('number');",
+                  "        pm.environment.set('deploymentId', res.deploymentId);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"replicas\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}/deployments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}",
+                "deployments"
+              ],
+              "query": []
+            },
+            "description": "Triggers Jenkins build and sets up Kubernetes deployment. Saves `deploymentId`."
+          }
+        },
+        {
+          "name": "6.2 List Project Deployments (GET /api/v1/projects/:projectId/deployments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response contains deployments array', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('deployments');",
+                  "    pm.expect(res.deployments).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}/deployments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}",
+                "deployments"
+              ],
+              "query": []
+            },
+            "description": "Lists all historical and active deployments for the project."
+          }
+        },
+        {
+          "name": "6.3 Get Deployment Status / Poll (GET /api/v1/deployments/:deploymentId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 (terminal) or 202 (in progress)', () => {",
+                  "    pm.expect([200, 202]).to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deployment payload has expected schema', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('deployment');",
+                  "    const d = res.deployment;",
+                  "    pm.expect(d.id).to.eql(Number(pm.environment.get('deploymentId')));",
+                  "    pm.expect(['PENDING', 'BUILDING', 'DEPLOYING', 'DEPLOYED', 'FAILED', 'DELETED']).to.include(d.status);",
+                  "    if (d.jenkinsBuildNumber) {",
+                  "        pm.environment.set('buildNumber', d.jenkinsBuildNumber);",
+                  "    }",
+                  "});",
+                  "// Bounded polling counter (prevents infinite runner loops)",
+                  "const status = pm.response.json().deployment?.status;",
+                  "const currentCount = Number(pm.environment.get('pollCount') || 0);",
+                  "if (pm.response.code === 202 && currentCount < 10) {",
+                  "    pm.environment.set('pollCount', currentCount + 1);",
+                  "} else {",
+                  "    pm.environment.unset('pollCount');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/{{deploymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "{{deploymentId}}"
+              ],
+              "query": []
+            },
+            "description": "Polls current deployment status. Returns 202 while building/deploying, 200 when terminal."
+          }
+        },
+        {
+          "name": "6.4 Unsupported Update Deployment (PATCH /api/v1/deployments/:deploymentId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 501 Not Implemented', () => {",
+                  "    pm.response.to.have.status(501);",
+                  "});",
+                  "pm.test('Expected 501 message returned', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Deployment updates are not supported by the current Kubernetes service.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"replicas\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/{{deploymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "{{deploymentId}}"
+              ],
+              "query": []
+            },
+            "description": "Verifies that deployment updates return 501 per spec."
+          }
+        },
+        {
+          "name": "6.5 Delete Deployment (DELETE /api/v1/deployments/:deploymentId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 (deleted) or 409 (active build/provisioning)', () => {",
+                  "    pm.expect([200, 409, 500]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Deleted response matches contract', () => {",
+                  "        const res = pm.response.json();",
+                  "        pm.expect(res.status).to.eql('DELETED');",
+                  "        pm.expect(res.deploymentId).to.eql(Number(pm.environment.get('deploymentId')));",
+                  "        pm.expect(res.message).to.be.a('string');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/{{deploymentId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "{{deploymentId}}"
+              ],
+              "query": []
+            },
+            "description": "Cleans up Kubernetes resources and marks deployment row DELETED."
+          }
+        },
+        {
+          "name": "6.6 Get Build by Build Number (GET /api/v1/builds/:buildNumber)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 (finished), 202 (building), or 404 (not started)', () => {",
+                  "    pm.expect([200, 202, 404]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200 || pm.response.code === 202) {",
+                  "    pm.test('Response matches JenkinsBuild schema', () => {",
+                  "        const res = pm.response.json();",
+                  "        pm.expect(res.buildNumber).to.eql(Number(pm.environment.get('buildNumber')));",
+                  "        pm.expect(['BUILDING', 'SUCCESS', 'FAILURE', 'ABORTED', 'UNSTABLE']).to.include(res.status);",
+                  "        pm.expect(res.deploymentId).to.be.a('number');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/builds/{{buildNumber}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "builds",
+                "{{buildNumber}}"
+              ],
+              "query": []
+            },
+            "description": "Fetches Jenkins build status for an owned deployment."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Deployment Logs",
+      "description": "Progressive log streaming by deployment ID and Jenkins build number.",
+      "item": [
+        {
+          "name": "7.1 Get Deployment Logs - Start 0 (GET /api/v1/deployments/:deploymentId/logs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 (logs available) or 409 (build not started yet)', () => {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Logs payload matches ProgressiveLog schema', () => {",
+                  "        const res = pm.response.json();",
+                  "        pm.expect(res).to.have.property('text');",
+                  "        pm.expect(res).to.have.property('nextOffset');",
+                  "        pm.expect(res).to.have.property('hasMore');",
+                  "        pm.expect(res.nextOffset).to.be.a('number');",
+                  "        pm.expect(res.hasMore).to.be.a('boolean');",
+                  "        pm.environment.set('startOffset', res.nextOffset);",
+                  "    });",
+                  "} else if (pm.response.code === 409) {",
+                  "    pm.test('Unstarted build message matches contract', () => {",
+                  "        pm.expect(pm.response.json().message).to.eql('Jenkins build has not started yet.');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/{{deploymentId}}/logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "{{deploymentId}}",
+                "logs"
+              ],
+              "query": []
+            },
+            "description": "Fetches progressive logs from offset 0."
+          }
+        },
+        {
+          "name": "7.2 Get Deployment Logs - With Offset (GET /api/v1/deployments/:deploymentId/logs?start={{startOffset}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 409', () => {",
+                  "    pm.expect([200, 409]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/{{deploymentId}}/logs?start={{startOffset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "{{deploymentId}}",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "{{startOffset}}",
+                  "description": "Log byte offset"
+                }
+              ]
+            },
+            "description": "Streams subsequent log chunks starting from {{startOffset}}."
+          }
+        },
+        {
+          "name": "7.3 Get Build Logs by Build Number - Start 0 (GET /api/v1/builds/:buildNumber/logs)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 404 (if build does not exist)', () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Build logs payload has expected fields', () => {",
+                  "        const res = pm.response.json();",
+                  "        pm.expect(res.buildNumber).to.eql(Number(pm.environment.get('buildNumber')));",
+                  "        pm.expect(res).to.have.property('text');",
+                  "        pm.expect(res).to.have.property('nextOffset');",
+                  "        pm.expect(res).to.have.property('hasMore');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/builds/{{buildNumber}}/logs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "builds",
+                "{{buildNumber}}",
+                "logs"
+              ],
+              "query": []
+            },
+            "description": "Fetches logs directly via Jenkins build number."
+          }
+        },
+        {
+          "name": "7.4 Get Build Logs by Build Number - With Offset (GET /api/v1/builds/:buildNumber/logs?start={{startOffset}})",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 404', () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/builds/{{buildNumber}}/logs?start={{startOffset}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "builds",
+                "{{buildNumber}}",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "{{startOffset}}",
+                  "description": "Log byte offset"
+                }
+              ]
+            },
+            "description": "Streams progressive logs by build number starting from {{startOffset}}."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Negative Tests",
+      "description": "Validation checks, security boundaries, error payloads, and non-destructive constraint tests.",
+      "item": [
+        {
+          "name": "8.1 Missing API Key Header (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', () => {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('Error payload matches InvalidApiKeyError contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.error).to.eql('Forbidden');",
+                  "    pm.expect(res.message).to.eql('Invalid API Key');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": []
+            },
+            "description": "Verifies rejection when `x-api-key` header is missing."
+          }
+        },
+        {
+          "name": "8.2 Invalid API Key Header (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 403 Forbidden', () => {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "pm.test('Error payload matches InvalidApiKeyError contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.error).to.eql('Forbidden');",
+                  "    pm.expect(res.message).to.eql('Invalid API Key');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "definitely_wrong_key_123",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ],
+              "query": []
+            },
+            "description": "Verifies rejection when `x-api-key` header has an invalid value."
+          }
+        },
+        {
+          "name": "8.3 Missing Firebase Bearer Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error payload matches UnauthorizedError', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.error).to.eql('unauthorized');",
+                  "    pm.expect(res.message).to.eql('Authorization token missing or invalid');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Verifies 401 response on protected routes when Authorization header is omitted."
+          }
+        },
+        {
+          "name": "8.4 Invalid Firebase Bearer Token (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401 Unauthorized', () => {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Error payload indicates invalid or unauthorized token', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.error).to.eql('unauthorized');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid.fake.token",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Verifies 401 response when Authorization token fails signature verification."
+          }
+        },
+        {
+          "name": "8.5 Invalid JSON Request Body (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Error message matches global JSON parse handler', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid JSON request body.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"name\": "
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
+              "query": []
+            },
+            "description": "Verifies global JSON syntax error handler returns 400 with documented message."
+          }
+        },
+        {
+          "name": "8.6 Invalid Project ID Path Param (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Validation message matches schema contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid project ID.');",
+                  "    pm.expect(res.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/not-a-number",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "not-a-number"
+              ],
+              "query": []
+            },
+            "description": "Verifies Zod path parameter validator rejects non-integer project IDs."
+          }
+        },
+        {
+          "name": "8.7 Invalid Runtime ID Path Param (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Validation message matches schema contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid runtime ID.');",
+                  "    pm.expect(res.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/runtimes/0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "runtimes",
+                "0"
+              ],
+              "query": []
+            },
+            "description": "Verifies rejection of non-positive runtime ID (must be > 0)."
+          }
+        },
+        {
+          "name": "8.8 Invalid Deployment ID Path Param (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Validation message matches schema contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid deployment ID.');",
+                  "    pm.expect(res.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "-1"
+              ],
+              "query": []
+            },
+            "description": "Verifies rejection of negative deployment ID."
+          }
+        },
+        {
+          "name": "8.9 Invalid Log Offset Query Param (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Validation message matches contract', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid log offset.');",
+                  "    pm.expect(res.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/1/logs?start=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "1",
+                "logs"
+              ],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "abc",
+                  "description": "Malformed offset"
+                }
+              ]
+            },
+            "description": "Verifies query validator rejects non-numeric start offset."
+          }
+        },
+        {
+          "name": "8.10 Non-existent Project Lookup (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Message matches Project not found', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Project not found.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/99999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "99999999"
+              ],
+              "query": []
+            },
+            "description": "Verifies 404 response for unowned or nonexistent project."
+          }
+        },
+        {
+          "name": "8.11 Non-existent Runtime Lookup (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Message matches Runtime not found', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Runtime not found.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/runtimes/99999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "runtimes",
+                "99999999"
+              ],
+              "query": []
+            },
+            "description": "Verifies 404 response for nonexistent runtime."
+          }
+        },
+        {
+          "name": "8.12 Non-existent Deployment Lookup (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Message matches Deployment not found', () => {",
+                  "    pm.expect(pm.response.json().message).to.eql('Deployment not found.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/deployments/99999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "deployments",
+                "99999999"
+              ],
+              "query": []
+            },
+            "description": "Verifies 404 response for nonexistent deployment."
+          }
+        },
+        {
+          "name": "8.13 Create Project With Extra Field [Strict Body] (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Message indicates invalid configuration due to unrecognized key', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid project configuration.');",
+                  "    pm.expect(res.errors).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"relay-extra-field-1793140024504\",\n  \"runtimeId\": 1,\n  \"repoUrl\": \"https://github.com/expressjs/express\",\n  \"branch\": \"main\",\n  \"runtimeVersion\": \"20-alpine\",\n  \"installCommand\": \"npm install\",\n  \"buildCommand\": \"\",\n  \"startCommand\": \"npm start\",\n  \"port\": 3000,\n  \"userId\": 999\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects"
+              ],
+              "query": []
+            },
+            "description": "Verifies Zod .strict() rejects requests containing unauthorized extra fields such as userId."
+          }
+        },
+        {
+          "name": "8.14 Create Deployment With githubToken in Body [Strict Schema Discrepancy] (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 Bad Request', () => {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Backend rejects unrecognized body key githubToken', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Invalid deployment request.');",
+                  "    pm.expect(res.errors[0].code).to.eql('unrecognized_keys');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"replicas\": 1,\n  \"githubToken\": \"{{githubToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}/deployments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}",
+                "deployments"
+              ],
+              "query": []
+            },
+            "description": "Demonstrates that the backend schema strictly permits only `replicas` in the deployment request body and reads GITHUB_TOKEN from server environment."
+          }
+        },
+        {
+          "name": "8.15 Project Update After Deployment Exists (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Error message indicates project is locked by deployment history', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Project configuration cannot be updated after a deployment has been created.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"port\": 9000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}"
+              ],
+              "query": []
+            },
+            "description": "Verifies that once a deployment exists for a project, subsequent configuration changes are blocked."
+          }
+        },
+        {
+          "name": "8.16 Project Deletion Blocked By Deployment History (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 409 Conflict', () => {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "pm.test('Error message indicates deletion blocked by deployment history', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Project cannot be deleted while deployment history exists.');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/{{projectId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{projectId}}"
+              ],
+              "query": []
+            },
+            "description": "Verifies project deletion is prevented while deployment records reference it."
+          }
+        },
+        {
+          "name": "8.17 Unknown Route / Global 404 Handler (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 Not Found', () => {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "pm.test('Matches global 404 handler message', () => {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.message).to.eql('Route not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{apiKey}}",
+                "type": "text",
+                "description": "Relay API verification key"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{firebaseIdToken}}",
+                "type": "text",
+                "description": "Firebase ID Bearer token"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/unknown-endpoint-xyz",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "unknown-endpoint-xyz"
+              ],
+              "query": []
+            },
+            "description": "Verifies unmapped URLs return 404 with `Route not found`."
+          }
+        }
+      ]
+    }
+  ]
+}

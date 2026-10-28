@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import type { FirebaseError } from 'firebase-admin';
 
 import auth from "../config/firebase.js"
+import type { DecodedIdToken } from 'firebase-admin/auth';
 
 export const verifyFirebaseToken = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
@@ -11,15 +12,26 @@ export const verifyFirebaseToken = async (req: Request, res: Response, next: Nex
     if(!token) return res.status(401).json({ error: 'unauthorized', message: 'Authorization token missing or invalid'});
 
     try{
-        const decodedToken = await auth.verifyIdToken(token, true);
+        const decodedToken: DecodedIdToken = await auth.verifyIdToken(token, true);
 
-        console.log(decodedToken);
+        if (!decodedToken.email || !decodedToken.name) {
+            return res.status(401).json({
+                error: 'unauthorized',
+                message: 'Your Firebase account must have an email and name.',
+            });
+        }
+
+        req.firebaseUser = {
+            uid: decodedToken.uid,
+            email: decodedToken.email,
+            name: decodedToken.name,
+        };
 
         next();
     }
     catch (err: any) {
         const error: FirebaseError = err;
-        console.error('Error verifying token:', error.code, error.message);
+        console.error('Firebase token verification failed:', error.code);
 
         let message = 'Unauthorized access';
         if (error.code === 'auth/id-token-expired') {

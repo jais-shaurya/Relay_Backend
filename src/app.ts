@@ -4,21 +4,24 @@ import express from "express"
 import cors from "cors";
 import dotenv from "dotenv"
 
-import userRouter from "./routes/user.js"
 import {verifyFirebaseToken} from "./middleware/firebase.js";
 import { verifyApiKey } from "./middleware/api.js";
 
+import apiRoutes from "./routes/api.routes.js";
+
 dotenv.config();
 
-const PORT = process.env.PORT
-const NODE_ENV = process.env.NODE_ENV
+const PORT = process.env.PORT || 3000;
+const NODE_ENV = process.env.NODE_ENV;
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use('user', userRouter);
+app.use(verifyApiKey);
+app.use('/api/v1', apiRoutes);
+
 
 
 //Test Route
@@ -32,7 +35,12 @@ app.get('/secured/user', verifyApiKey, verifyFirebaseToken, (req: Request, res: 
 
 // Global error handler
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Global error handler:', err);
+  const requestError = err as Error & { type?: string };
+  if (requestError.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Invalid JSON request body.' });
+  }
+
+  console.error('Unhandled request error:', err.name);
   res.status(500).json({ message: 'An unexpected error occurred.' });
 });
 

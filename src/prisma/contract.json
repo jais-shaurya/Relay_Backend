@@ -4,19 +4,19 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
-    "deployment": {
+    "Deployment": {
       "model": "Deployment",
       "namespace": "public"
     },
-    "project": {
+    "Project": {
       "model": "Project",
       "namespace": "public"
     },
-    "runtime": {
+    "Runtime": {
       "model": "Runtime",
       "namespace": "public"
     },
-    "user": {
+    "User": {
       "model": "User",
       "namespace": "public"
     }
@@ -33,12 +33,24 @@
                 "value": "PENDING"
               },
               {
+                "name": "BUILDING",
+                "value": "BUILDING"
+              },
+              {
+                "name": "DEPLOYING",
+                "value": "DEPLOYING"
+              },
+              {
                 "name": "DEPLOYED",
                 "value": "DEPLOYED"
               },
               {
                 "name": "FAILED",
                 "value": "FAILED"
+              },
+              {
+                "name": "DELETED",
+                "value": "DELETED"
               }
             ]
           }
@@ -47,7 +59,7 @@
           "Deployment": {
             "fields": {
               "commitHash": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -69,6 +81,20 @@
               },
               "image": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "jenkinsBuildNumber": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "jenkinsQueueUrl": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -148,6 +174,12 @@
                 "image": {
                   "column": "image"
                 },
+                "jenkinsBuildNumber": {
+                  "column": "jenkinsBuildNumber"
+                },
+                "jenkinsQueueUrl": {
+                  "column": "jenkinsQueueUrl"
+                },
                 "projectId": {
                   "column": "projectId"
                 },
@@ -165,7 +197,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "deployment"
+              "table": "Deployment"
             }
           },
           "Project": {
@@ -354,7 +386,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "project"
+              "table": "Project"
             }
           },
           "Runtime": {
@@ -411,7 +443,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "runtime"
+              "table": "Runtime"
             }
           },
           "User": {
@@ -424,6 +456,13 @@
                 }
               },
               "email": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "firebaseUid": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -477,6 +516,9 @@
                 "email": {
                   "column": "email"
                 },
+                "firebaseUid": {
+                  "column": "firebaseUid"
+                },
                 "id": {
                   "column": "id"
                 },
@@ -488,7 +530,7 @@
                 }
               },
               "namespaceId": "public",
-              "table": "user"
+              "table": "User"
             }
           }
         }
@@ -500,64 +542,74 @@
       "public": {
         "entries": {
           "table": {
-            "deployment": {
+            "Deployment": {
               "checks": [
                 {
-                  "expression": "\"status\" IN ('PENDING', 'DEPLOYED', 'FAILED')",
-                  "name": "deployment_status_check_d16b4cfd",
-                  "prefix": "deployment_status_check"
+                  "expression": "\"status\" IN ('PENDING', 'BUILDING', 'DEPLOYING', 'DEPLOYED', 'FAILED', 'DELETED')",
+                  "name": "Deployment_status_check_76f50c81",
+                  "prefix": "Deployment_status_check"
                 }
               ],
               "columns": {
                 "commitHash": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
-                  "nullable": false
+                  "dataType": "pg/text",
+                  "nullable": true
                 },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
                   "default": {
                     "expression": "now()",
                     "kind": "function"
                   },
-                  "nativeType": "timestamptz",
                   "nullable": false
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "default": {
                     "expression": "autoincrement()",
                     "kind": "function"
                   },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "image": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
+                },
+                "jenkinsBuildNumber": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "nullable": true
+                },
+                "jenkinsQueueUrl": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
                 },
                 "projectId": {
                   "codecId": "pg/int4@1",
-                  "nativeType": "int4",
+                  "dataType": "pg/int4",
                   "nullable": false
                 },
                 "replicas": {
                   "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "default": {
                     "kind": "literal",
                     "value": 1
                   },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "status": {
                   "codecId": "pg/text@1",
+                  "dataType": "pg/text",
                   "default": {
                     "kind": "literal",
                     "value": "PENDING"
                   },
-                  "nativeType": "text",
                   "nullable": false,
                   "valueSet": {
                     "entityKind": "valueSet",
@@ -568,31 +620,34 @@
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
-                  "nativeType": "timestamptz",
+                  "dataType": "pg/timestamptz",
                   "nullable": false
                 },
                 "url": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 }
               },
               "foreignKeys": [
                 {
+                  "index": {
+                    "name": "Deployment_projectId_idx_a96e4d92"
+                  },
                   "onDelete": "restrict",
                   "source": {
                     "columns": [
                       "projectId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "deployment"
+                    "tableName": "Deployment"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "project"
+                    "tableName": "Project"
                   }
                 }
               ],
@@ -601,8 +656,8 @@
                   "columns": [
                     "projectId"
                   ],
-                  "name": "deployment_projectId_idx_a96e4d92",
-                  "prefix": "deployment_projectId_idx",
+                  "name": "Deployment_projectId_idx_a96e4d92",
+                  "prefix": "Deployment_projectId_idx",
                   "unique": false
                 }
               ],
@@ -613,119 +668,125 @@
               },
               "uniques": []
             },
-            "project": {
+            "Project": {
               "columns": {
                 "branch": {
                   "codecId": "pg/text@1",
+                  "dataType": "pg/text",
                   "default": {
                     "kind": "literal",
                     "value": "main"
                   },
-                  "nativeType": "text",
                   "nullable": false
                 },
                 "buildCommand": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
                   "default": {
                     "expression": "now()",
                     "kind": "function"
                   },
-                  "nativeType": "timestamptz",
                   "nullable": false
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "default": {
                     "expression": "autoincrement()",
                     "kind": "function"
                   },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "installCommand": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "name": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "port": {
                   "codecId": "pg/int4@1",
-                  "nativeType": "int4",
+                  "dataType": "pg/int4",
                   "nullable": false
                 },
                 "repoUrl": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "runtimeId": {
                   "codecId": "pg/int4@1",
-                  "nativeType": "int4",
+                  "dataType": "pg/int4",
                   "nullable": false
                 },
                 "runtimeVersion": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "startCommand": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
-                  "nativeType": "timestamptz",
+                  "dataType": "pg/timestamptz",
                   "nullable": false
                 },
                 "userId": {
                   "codecId": "pg/int4@1",
-                  "nativeType": "int4",
+                  "dataType": "pg/int4",
                   "nullable": false
                 }
               },
               "foreignKeys": [
                 {
+                  "index": {
+                    "name": "Project_userId_idx_a489d58a"
+                  },
                   "onDelete": "restrict",
                   "source": {
                     "columns": [
                       "userId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "project"
+                    "tableName": "Project"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "user"
+                    "tableName": "User"
                   }
                 },
                 {
+                  "index": {
+                    "name": "Project_runtimeId_idx_dd339145"
+                  },
                   "onDelete": "restrict",
                   "source": {
                     "columns": [
                       "runtimeId"
                     ],
                     "namespaceId": "public",
-                    "tableName": "project"
+                    "tableName": "Project"
                   },
                   "target": {
                     "columns": [
                       "id"
                     ],
                     "namespaceId": "public",
-                    "tableName": "runtime"
+                    "tableName": "Runtime"
                   }
                 }
               ],
@@ -734,16 +795,16 @@
                   "columns": [
                     "runtimeId"
                   ],
-                  "name": "project_runtimeId_idx_dd339145",
-                  "prefix": "project_runtimeId_idx",
+                  "name": "Project_runtimeId_idx_dd339145",
+                  "prefix": "Project_runtimeId_idx",
                   "unique": false
                 },
                 {
                   "columns": [
                     "userId"
                   ],
-                  "name": "project_userId_idx_a489d58a",
-                  "prefix": "project_userId_idx",
+                  "name": "Project_userId_idx_a489d58a",
+                  "prefix": "Project_userId_idx",
                   "unique": false
                 }
               ],
@@ -760,25 +821,25 @@
                 }
               ]
             },
-            "runtime": {
+            "Runtime": {
               "columns": {
                 "baseImage": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "default": {
                     "expression": "autoincrement()",
                     "kind": "function"
                   },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "name": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 }
               },
@@ -797,39 +858,44 @@
                 }
               ]
             },
-            "user": {
+            "User": {
               "columns": {
                 "createdAt": {
                   "codecId": "pg/timestamptz-string@1",
+                  "dataType": "pg/timestamptz",
                   "default": {
                     "expression": "now()",
                     "kind": "function"
                   },
-                  "nativeType": "timestamptz",
                   "nullable": false
                 },
                 "email": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
+                  "nullable": false
+                },
+                "firebaseUid": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "id": {
                   "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
                   "default": {
                     "expression": "autoincrement()",
                     "kind": "function"
                   },
-                  "nativeType": "int4",
                   "nullable": false
                 },
                 "name": {
                   "codecId": "pg/text@1",
-                  "nativeType": "text",
+                  "dataType": "pg/text",
                   "nullable": false
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz-string@1",
-                  "nativeType": "timestamptz",
+                  "dataType": "pg/timestamptz",
                   "nullable": false
                 }
               },
@@ -841,6 +907,11 @@
                 ]
               },
               "uniques": [
+                {
+                  "columns": [
+                    "firebaseUid"
+                  ]
+                },
                 {
                   "columns": [
                     "email"
@@ -854,8 +925,11 @@
               "kind": "valueSet",
               "values": [
                 "PENDING",
+                "BUILDING",
+                "DEPLOYING",
                 "DEPLOYED",
-                "FAILED"
+                "FAILED",
+                "DELETED"
               ]
             }
           }
@@ -864,10 +938,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "36bcd39b73514e039e7b6741a52d4059983fc889fd323bb2074910b726568200"
+    "storageHash": "2909913299f968647787816fc1792978487cc2ef9083014fa050f401e77a1864"
   },
   "execution": {
-    "executionHash": "cd8eacc728af3d5df4b48713de7daed148e505357ff104212df83ce2e31ce333",
+    "executionHash": "f991876735bd6d45eea6d8a374bcf3a1692ffa19fa195887981c87376c9ae773",
     "mutations": {
       "defaults": [
         {
@@ -880,9 +954,9 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "updatedAt",
-            "namespace": "public",
-            "table": "deployment"
+            "entry": "Deployment",
+            "field": "updatedAt",
+            "namespace": "public"
           }
         },
         {
@@ -895,9 +969,9 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "updatedAt",
-            "namespace": "public",
-            "table": "project"
+            "entry": "Project",
+            "field": "updatedAt",
+            "namespace": "public"
           }
         },
         {
@@ -910,9 +984,9 @@
             "kind": "generator"
           },
           "ref": {
-            "column": "updatedAt",
-            "namespace": "public",
-            "table": "user"
+            "entry": "User",
+            "field": "updatedAt",
+            "namespace": "public"
           }
         }
       ]
@@ -921,6 +995,8 @@
   "capabilities": {
     "postgres": {
       "distinctOn": true,
+      "forKeyShare": true,
+      "forNoKeyUpdate": true,
       "jsonAgg": true,
       "lateral": true,
       "limit": true,
@@ -931,7 +1007,14 @@
       "checkConstraint": true,
       "defaultInInsert": true,
       "enums": true,
+      "forShare": true,
+      "forUpdate": true,
+      "insertOnConflictSkip": true,
+      "insertOnConflictWithoutTarget": true,
       "lateral": true,
+      "lockNowait": true,
+      "lockOf": true,
+      "lockSkipLocked": true,
       "returning": true,
       "scalarList": true
     }

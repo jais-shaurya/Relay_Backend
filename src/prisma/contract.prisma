@@ -2,6 +2,7 @@
 
 model User {
   id              Int      @id @default(autoincrement())
+  firebaseUid String  @unique
   email           String   @unique
   name            String
   
@@ -42,8 +43,11 @@ model Project {
 
 enum Status {
   PENDING
+  BUILDING
+  DEPLOYING
   DEPLOYED
   FAILED
+  DELETED
 }
 
 model Deployment {
@@ -54,7 +58,9 @@ model Deployment {
   url             String
   status          Status   @default(PENDING)
   replicas        Int      @default(1)
-  commitHash      String
+  commitHash      String?
+  jenkinsQueueUrl String?
+  jenkinsBuildNumber Int?
 
   createdAt       TimestamptzString @default(now())
   updatedAt       temporal.updatedAtString()
